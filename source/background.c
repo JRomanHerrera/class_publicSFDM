@@ -571,6 +571,54 @@ int background_functions(
     p_tot += (1./3.) * pvecback[pba->index_bg_rho_idr];
     rho_r += pvecback[pba->index_bg_rho_idr];
   }
+  /* SFDM. It should be the last density component to be computed! */
+  if (pba->has_sfdm == _TRUE_) {
+    double theta, y1, alpha;  
+    double exp_sfdm, exp2a, sin_th, cos_th;
+    double f_sfdm, cos4_thsfdm, cos2sen_sfdm;
+    double q_sfdm, q2_sfdm, Q2_sfdm, Om_sfdm; 
+    double rho_sfdm, p_sfdm; 
+    theta = pvecback_B[pba->index_bi_theta_sfdm];
+    y1    = pvecback_B[pba->index_bi_y1_sfdm];
+    alpha = pvecback_B[pba->index_bi_alpha_sfdm];
+
+    /* --- useful quantities --- */
+    exp_sfdm  = exp(alpha);
+    exp2a     = exp_sfdm*exp_sfdm;
+    cos_th    = cos_sfdm(pba, theta);
+    sin_th    = sin_sfdm(pba, theta);
+
+    // value of the q, q2, Q2, \Omega_sfdm, variables; 
+    q_sfdm = pba->sfdm_parameters[1]; 
+    f_sfdm = exp_sfdm/y1; // value of f_sfdm= exp(alpha)/y1
+    cos2sen_sfdm = 0.5*(1. + cos_th)*sin_th;
+    //cos4_sfdm = 0.375 + 0.5*cos_th + 0.125*cos_2th;
+    cos4_thsfdm = cos4_sfdm(pba, theta);
+    q2_sfdm = q_sfdm*q_sfdm*f_sfdm*f_sfdm*y1*cos2sen_sfdm; // value of q2_sfdm= q^2*exp(2alpha)Cos^2(\theta/2)sin\theta/y1
+    //Q2_sfdm = 0.25*q_sfdm*q_sfdm*(1. + cos_th)*(1. + cos_th); // value of q2_sfdm= q^2*exp(2alpha)cos^4(\theta/2))/y1^2
+    Q2_sfdm = q_sfdm*q_sfdm*f_sfdm*f_sfdm*cos4_thsfdm;
+    //Q2_sfdm = q_sfdm*q_sfdm*cos4_sfdm(pba, theta); // value of Q2_sfdm= (0.375+0.5*cos_th + 0.125*cos_sfdm(pba, 2*theta))
+    Om_sfdm = exp2a * (1.+ Q2_sfdm); //Omega_sfdm= e^{2\alpha}[1 + q^2*exp(2alpha)cos^4(\theta/2))/y1^2]
+    rho_sfdm = Om_sfdm*rho_tot/(1.-Om_sfdm); // energy of the sfdm.
+    p_sfdm   = -(cos_th + Q2_sfdm) * rho_sfdm/(1. + Q2_sfdm); // pressure of the sfdm p_sfdm=w_sfdm *rho_sfdm
+
+
+    /* --- store results --- */
+    pvecback[pba->index_bg_theta_sfdm] = theta;
+    pvecback[pba->index_bg_y1_sfdm]    = y1;
+    pvecback[pba->index_bg_e2alpha_sfdm] = exp2a;
+    
+    pvecback[pba->index_bg_f_sfdm]       = f_sfdm;         /**< scalar field dark matter e^{\alpha}/y_1 */
+    pvecback[pba->index_bg_q2_sfdm]    = q2_sfdm;
+    pvecback[pba->index_bg_Q2_sfdm]    = Q2_sfdm;
+
+    pvecback[pba->index_bg_rho_sfdm]   = rho_sfdm;
+    pvecback[pba->index_bg_p_sfdm]     = p_sfdm;
+    /*---Total contribution*/
+    rho_tot += rho_sfdm;
+    p_tot   += p_sfdm;
+    rho_m   += rho_sfdm;
+  }
 
   /** - compute expansion rate H from Friedmann equation: this is the
       only place where the Friedmann equation is assumed. Remember
@@ -586,6 +634,9 @@ int background_functions(
 
   /* Total pressure */
   pvecback[pba->index_bg_p_tot] = p_tot;
+
+  /** - Compute the total EoS: w_tot (usefull for SFDM)*/
+  pvecback[pba->index_bg_w_tot] = p_tot/rho_tot;
 
   /* Derivative of total pressure w.r.t. conformal time */
   pvecback[pba->index_bg_p_tot_prime] = a*pvecback[pba->index_bg_H]*dp_dloga;
@@ -946,6 +997,11 @@ int background_free_input(
       free(pba->ncdm_psd_parameters);
   }
 
+  if (pba->Omega0_sfdm != 0.){
+      if (pba->sfdm_parameters != NULL)
+        free(pba->sfdm_parameters);
+  }
+
   if (pba->Omega0_scf != 0.) {
     if (pba->scf_parameters != NULL)
       free(pba->scf_parameters);
@@ -980,6 +1036,7 @@ int background_indices(
   pba->has_ncdm = _FALSE_;
   pba->has_dcdm = _FALSE_;
   pba->has_dr = _FALSE_;
+  pba->has_sfdm = _FALSE_;
   pba->has_scf = _FALSE_;
   pba->has_lambda = _FALSE_;
   pba->has_fld = _FALSE_;
@@ -1002,6 +1059,9 @@ int background_indices(
     if (pba->Gamma_dcdm != 0.)
       pba->has_dr = _TRUE_;
   }
+
+  if (pba->Omega0_sfdm != 0.)
+    pba->has_sfdm = _TRUE_;
 
   if (pba->Omega0_scf != 0.)
     pba->has_scf = _TRUE_;
@@ -1062,6 +1122,18 @@ int background_indices(
 
   /* - index for dr */
   class_define_index(pba->index_bg_rho_dr,pba->has_dr,index_bg,1);
+
+  /* - indices for scalar field dark matter */
+  class_define_index(pba->index_bg_theta_sfdm,pba->has_sfdm,index_bg,1);
+  class_define_index(pba->index_bg_y1_sfdm,pba->has_sfdm,index_bg,1);
+  class_define_index(pba->index_bg_e2alpha_sfdm,pba->has_sfdm,index_bg,1);
+  
+  class_define_index(pba->index_bg_f_sfdm,pba->has_sfdm,index_bg,1);
+  class_define_index(pba->index_bg_q2_sfdm,pba->has_sfdm,index_bg,1);
+  class_define_index(pba->index_bg_Q2_sfdm,pba->has_sfdm,index_bg,1);
+  
+  class_define_index(pba->index_bg_rho_sfdm,pba->has_sfdm,index_bg,1);
+  class_define_index(pba->index_bg_p_sfdm,pba->has_sfdm,index_bg,1);
 
   /* - indices for scalar field */
   class_define_index(pba->index_bg_phi_scf,pba->has_scf,index_bg,1);
@@ -1164,6 +1236,11 @@ int background_indices(
 
   /* -> energy density in fluid */
   class_define_index(pba->index_bi_rho_fld,pba->has_fld,index_bi,1);
+
+  /* -> SFDM integration variables */
+  class_define_index(pba->index_bi_theta_sfdm,pba->has_sfdm,index_bi,1);
+  class_define_index(pba->index_bi_y1_sfdm,pba->has_sfdm,index_bi,1);
+  class_define_index(pba->index_bi_alpha_sfdm,pba->has_sfdm,index_bi,1);
 
   /* -> scalar field and its derivative wrt conformal time (Zuma) */
   class_define_index(pba->index_bi_phi_scf,pba->has_scf,index_bi,1);
@@ -2061,6 +2138,23 @@ int background_solve(
     printf(" -> age = %f Gyr\n",pba->age);
     printf(" -> conformal age = %f Mpc\n",pba->conformal_age);
     printf(" -> N_eff = %g (summed over all species that are non-relativistic at early times) \n",pba->Neff);
+    if (pba->has_lambda == _TRUE_) {
+        printf("     -> Omega_Lambda = %g, wished %g\n",
+               pba->background_table[(pba->bt_size-1)*pba->bg_size+pba->index_bg_rho_lambda]/pba->background_table[(pba->bt_size-1)*pba->bg_size+pba->index_bg_rho_crit], pba->Omega0_lambda);
+    }
+    printf(" Total non-relativistic matter:\n");
+    printf(" -> Omega_m = %g\n", pba->Omega0_b + pba->Omega0_cdm + pba->Omega0_sfdm + pba->Omega0_ncdm_tot + pba->Omega0_dcdmdr +  pba->Omega0_idm);
+    printf(" -> Omega_b = %g\n", pba->Omega0_b);
+    printf(" -> Omega_cdm = %g\n", pba->Omega0_cdm);
+    if (pba->has_sfdm == _TRUE_){
+	        printf("Scalar Field Dark Matter details:\n");
+	        printf(" -> Omega_sfdm = %g, wished %g\n", pba->background_table[(pba->bt_size-1)*pba->bg_size+pba->index_bg_rho_sfdm]/pba->background_table[(pba->bt_size-1)*pba->bg_size+pba->index_bg_rho_crit], pba->Omega0_sfdm);
+	        printf(" -> q_sfdm = %g\n",pba->sfdm_parameters[1]);
+          printf(" -> Mass_sfdm = %1.2e [eV], %1.2e [1/Mpc], %1.2e [H_0]\n", 3.19696e-30*pvecback[pba->index_bg_y1_sfdm]*pvecback[pba->index_bg_H], 0.5*pvecback[pba->index_bg_y1_sfdm]*pvecback[pba->index_bg_H], 0.5*pvecback[pba->index_bg_y1_sfdm]);
+          printf("    -> wished = %1.2e [eV]\n", pow(10.,pba->sfdm_parameters[0]));
+          printf(" -> Omegai_sfdm = %1.2e\n", pba->background_table[0*pba->bg_size+pba->index_bg_rho_sfdm]/pba->background_table[0*pba->bg_size+pba->index_bg_rho_crit]);
+          printf(" -> Q^2i_sfdm = %1.2e\n", pba->background_table[0*pba->bg_size+pba->index_bg_Q2_sfdm]);
+    }
   }
 
   if (pba->background_verbose > 2) {
@@ -2254,6 +2348,20 @@ int background_initial_conditions(
     /* rho_fld at initial time */
     pvecback_integration[pba->index_bi_rho_fld] = rho_fld_today * exp(integral_fld);
 
+  }
+
+  /** - Fix initial values of variables of SFDM */
+  if(pba->has_sfdm == _TRUE_){
+    pvecback_integration[pba->index_bi_theta_sfdm] = pba->theta_ini_sfdm;
+    pvecback_integration[pba->index_bi_y1_sfdm] = pba->y1_ini_sfdm;
+    pvecback_integration[pba->index_bi_alpha_sfdm] = pba->alpha_ini_sfdm;
+
+    class_test(!isfinite(pvecback_integration[pba->index_bi_theta_sfdm]) ||
+    !isfinite(pvecback_integration[pba->index_bi_alpha_sfdm]),
+    pba->error_message,
+    "initial theta_sfdm = %e alpha_sfdm = %e -> check initial conditions",
+    pvecback_integration[pba->index_bi_theta_sfdm],
+    pvecback_integration[pba->index_bi_alpha_sfdm]);
   }
 
   /** - Fix initial value of \f$ \phi, \phi' \f$
@@ -2457,6 +2565,17 @@ int background_output_titles(
   class_store_columntitle(titles,"(.)rho_crit",_TRUE_);
   class_store_columntitle(titles,"(.)rho_dcdm",pba->has_dcdm);
   class_store_columntitle(titles,"(.)rho_dr",pba->has_dr);
+  
+  class_store_columntitle(titles,"theta_sfdm",pba->has_sfdm);
+  class_store_columntitle(titles,"y1_sfdm",pba->has_sfdm);
+  class_store_columntitle(titles,"exp(2alpha_sfdm)",pba->has_sfdm);
+  
+  class_store_columntitle(titles,"f_sfdm",pba->has_sfdm);
+  class_store_columntitle(titles,"q2_sfdm",pba->has_sfdm);
+  class_store_columntitle(titles,"Q2_sfdm",pba->has_sfdm);
+  
+  class_store_columntitle(titles,"(.)rho_sfdm",pba->has_sfdm);
+  class_store_columntitle(titles,"(.)p_sfdm",pba->has_sfdm);
 
   class_store_columntitle(titles,"(.)rho_scf",pba->has_scf);
   class_store_columntitle(titles,"(.)p_scf",pba->has_scf);
@@ -2533,6 +2652,19 @@ int background_output_data(
     class_store_double(dataptr,pvecback[pba->index_bg_rho_crit],_TRUE_,storeidx);
     class_store_double(dataptr,pvecback[pba->index_bg_rho_dcdm],pba->has_dcdm,storeidx);
     class_store_double(dataptr,pvecback[pba->index_bg_rho_dr],pba->has_dr,storeidx);
+
+    /* --- SFDM output --- */
+    class_store_double(dataptr,pvecback[pba->index_bg_theta_sfdm],pba->has_sfdm,storeidx);
+    class_store_double(dataptr,pvecback[pba->index_bg_y1_sfdm],pba->has_sfdm,storeidx);
+    class_store_double(dataptr,pvecback[pba->index_bg_e2alpha_sfdm],pba->has_sfdm,storeidx);
+    
+    class_store_double(dataptr,pvecback[pba->index_bg_f_sfdm],pba->has_sfdm,storeidx);
+    class_store_double(dataptr,pvecback[pba->index_bg_q2_sfdm],pba->has_sfdm,storeidx);
+    class_store_double(dataptr,pvecback[pba->index_bg_Q2_sfdm],pba->has_sfdm,storeidx);
+    
+    class_store_double(dataptr,pvecback[pba->index_bg_rho_sfdm],pba->has_sfdm,storeidx);
+    class_store_double(dataptr,pvecback[pba->index_bg_p_sfdm],pba->has_sfdm,storeidx);
+
 
     class_store_double(dataptr,pvecback[pba->index_bg_rho_scf],pba->has_scf,storeidx);
     class_store_double(dataptr,pvecback[pba->index_bg_p_scf],pba->has_scf,storeidx);
@@ -2658,6 +2790,28 @@ int background_derivs(
   if (pba->has_fld == _TRUE_) {
     /** - Compute fld density \f$ d\rho/dloga = -3 (1+w_{fld}(a)) \rho \f$ */
     dy[pba->index_bi_rho_fld] = -3.*(1.+pvecback[pba->index_bg_w_fld])*y[pba->index_bi_rho_fld];
+  }
+
+  if (pba->has_sfdm == _TRUE_){
+    double theta, y1, alpha, w_tot;
+    double sin_t, cos_t, q_sfdm, exp_sfdm; //Q_sfdm,
+    double cos_2t;
+    theta  = y[pba->index_bi_theta_sfdm];
+    y1     = y[pba->index_bi_y1_sfdm];
+    alpha  = y[pba->index_bi_alpha_sfdm];
+    w_tot  = pvecback[pba->index_bg_w_tot];
+    sin_t  = sin_sfdm(pba, theta);
+    cos_t  = cos_sfdm(pba, theta);
+    cos_2t  = cos_2sfdm(pba, theta);
+    q_sfdm = pba->sfdm_parameters[1];
+    //Recordemos: Q = q_sfdm*exp_sfdm*(1.+cos_th)/y1;;
+    exp_sfdm = exp(alpha);
+    //Q_sfdm = q_sfdm*(1. + cos_t)*exp_sfdm/y1;
+
+    dy[pba->index_bi_y1_sfdm] = 1.5*(1. + w_tot)*y1;
+    //dy[pba->index_bi_theta_sfdm] = -3.*sin_t + y1 + 0.5*q_sfdm*q_sfdm*exp_sfdm*exp_sfdm*(0.375 + 0.5*cos_t + 0.125*cos_2t)/y1;
+    dy[pba->index_bi_theta_sfdm] = -3.*sin_t + y1 + 2.0*q_sfdm*q_sfdm*exp_sfdm*exp_sfdm*cos4_sfdm(pba, theta)/y1;
+    dy[pba->index_bi_alpha_sfdm] = 1.5*(w_tot + cos_t) + 0.25*q_sfdm*q_sfdm*exp_sfdm*exp_sfdm*(1. + cos_t)*sin_t/y1;
   }
 
   if (pba->has_scf == _TRUE_) {
@@ -2815,6 +2969,10 @@ int background_output_budget(
     if (pba->has_dcdm == _TRUE_) {
       class_print_species("Decaying Cold Dark Matter",dcdm);
       budget_matter+=pba->Omega0_dcdm;
+    }
+    if (pba->has_sfdm == _TRUE_) {
+      class_print_species("Scalar Field Dark Matter",sfdm);
+      budget_matter+=pba->Omega0_sfdm;
     }
 
     if (pba->N_ncdm > 0) {
@@ -3004,4 +3162,48 @@ double ddV_scf(
                struct background *pba,
                double phi) {
   return ddV_e_scf(pba,phi)*V_p_scf(pba,phi) + 2*dV_e_scf(pba,phi)*dV_p_scf(pba,phi) + V_e_scf(pba,phi)*ddV_p_scf(pba,phi);
+}
+
+double sin_sfdm(struct background *pba,
+               double theta_sfdm
+               ) {
+    /*double theta_thresh = 1.e2;*/
+    double theta_thresh = 30*_PI_;
+    double theta_tol = 1.;//1.e-2;
+    return 0.5*(1.-tanh(theta_tol*(theta_sfdm-theta_thresh)))*sin(theta_sfdm);
+}
+
+double cos_2sfdm(struct background *pba,
+               double theta_sfdm
+               ) {
+    /*double theta_thresh = 1.e2;*/
+    double theta_thresh = 30*_PI_;
+    double theta_tol = 1.;//1.e-2;
+    return 0.5*(1.-tanh(theta_tol*(theta_sfdm-theta_thresh)))*cos(2*theta_sfdm);
+}
+
+double sin_2sfdm(struct background *pba,
+               double theta_sfdm
+               ) {
+    /*double theta_thresh = 1.e2;*/
+    double theta_thresh = 30*_PI_;
+    double theta_tol = 1.;//1.e-2;
+    return 0.5*(1.-tanh(theta_tol*(theta_sfdm-theta_thresh)))*sin(2*theta_sfdm);
+}
+
+double cos4_sfdm(struct background *pba,
+                 double theta_sfdm
+                 ) {
+    double theta_thresh = 30*_PI_;
+    double theta_tol = 1.0;
+    // 1. Calculamos el factor de mezcla (0 antes de thresh, 1 después)
+    //double W = 0.5 * (1.0 - tanh(theta_tol * (theta_sfdm*theta_sfdm - theta_n*theta_n)));
+    double W = 0.5 * (1.0 - tanh(theta_tol * (theta_sfdm - theta_thresh)));
+    // usar funciones normales
+    double cos_th = cos(theta_sfdm);
+    // 2. Definimos las dos regiones
+    double region_oscilante = 0.25 * (1.0 + cos_th)*(1.0 + cos_th);
+    double region_promedio  = 3.0 / 8.0;
+    // 3. Combinación lineal suave
+    return W * region_oscilante + (1.0 - W) * region_promedio;
 }

@@ -102,6 +102,16 @@ struct background
 
   double Omega0_lambda;    /**< \f$ \Omega_{0_\Lambda} \f$: cosmological constant */
   double Omega0_fld;       /**< \f$ \Omega_{0 de} \f$: fluid */
+  /** SFDM **/
+  double Omega0_sfdm;        /**< \f$ \Omega_{0 sfdm} \f$: scalar field dark matter */
+  short attractor_ic_sfdm;   /**< whether the scalar field dark matter has attractor initial conditions */
+  double theta_ini_sfdm;       /**< \f$ \theta_sfdm(t_0) \f$: scalar field initial angular value */
+  double y1_ini_sfdm;       /**< \f$ y1_sfdm(t_0) \f$: initial axillary mass value of the scalar field */
+  double alpha_ini_sfdm;       /**< \f$ alpha_sfdm(t_0) \f$: scalar field initial 0.5*log(Omega_ini) value only for q=0 */
+  double * sfdm_parameters;  /**< list of parameters describing the scalar field dark matter potential */
+  int sfdm_parameters_size;  /**< size of sfdm_parameters */
+  int sfdm_tuning_index;     /**< index in sfdm_parameters used for tuning */
+
   double Omega0_scf;       /**< \f$ \Omega_{0 scf} \f$: scalar field */
   short use_ppf; /**< flag switching on PPF perturbation equations instead of true fluid equations for perturbations. It could have been defined inside
                     perturbation structure, but we leave it here in such way to have all fld parameters grouped. */
@@ -172,6 +182,17 @@ struct background
   int index_bg_rho_ur;        /**< relativistic neutrinos/relics density */
   int index_bg_rho_dcdm;      /**< dcdm density */
   int index_bg_rho_dr;        /**< dr density */
+
+  /** SFDM**/
+  int index_bg_theta_sfdm;       /**< scalar field dark matter angular variable */
+  int index_bg_y1_sfdm; /**< scalar field dark matter mass variable */
+  int index_bg_e2alpha_sfdm;         /**< scalar field dark matter 0.5*log(density parameter) */
+  int index_bg_rho_sfdm;       /**< scalar field dark matter energy density */
+  int index_bg_p_sfdm;         /**< scalar field dark matter pressure */
+  int index_bg_f_sfdm;         /**< scalar field dark matter e^{2\alpha}/y^2_1 */
+  int index_bg_q2_sfdm; /**< scalar field dark matter q variable */
+  int index_bg_Q2_sfdm; /**< scalar field dark matter Q dynamic variable */
+  int index_bg_w_tot;         /**< total equation of state */
 
   int index_bg_phi_scf;       /**< scalar field value */
   int index_bg_phi_prime_scf; /**< scalar field derivative wrt conformal time */
@@ -258,6 +279,11 @@ struct background
   int index_bi_phi_scf;       /**< {B} scalar field value */
   int index_bi_phi_prime_scf; /**< {B} scalar field derivative wrt conformal time */
 
+   /**SFDM **/
+  int index_bi_theta_sfdm;       /**< {B} scalar field dark matter angular variable */
+  int index_bi_y1_sfdm;       /**< {B} scalar field dark matter mass variable */
+  int index_bi_alpha_sfdm; /**< {B} scalar field dark matter related to density Omega parameter */
+
   int index_bi_time;    /**< {C} proper (cosmological) time in Mpc */
   int index_bi_rs;      /**< {C} sound horizon */
   int index_bi_tau;     /**< {C} conformal time in Mpc */
@@ -283,6 +309,7 @@ struct background
   short has_idm;       /**< presence of interacting dark matter with photons, baryons, and idr */
   short has_dcdm;      /**< presence of decaying cold dark matter? */
   short has_dr;        /**< presence of relativistic decay radiation? */
+  short has_sfdm;      /**< presence of scalar field dark matter? */
   short has_scf;       /**< presence of a scalar field? */
   short has_ncdm;      /**< presence of non-cold dark matter? */
   short has_lambda;    /**< presence of cosmological constant? */
@@ -545,7 +572,17 @@ extern "C" {
   int background_output_budget(
                                struct background* pba
                                );
+  /** SFDM special functions. See background.c for more details. */
+  double cos_sfdm(struct background *pba, double theta_phi);
 
+  double sin_sfdm(struct background *pba, double theta_phi);
+
+  double cos_2sfdm(struct background *pba, double theta_phi);
+
+  double sin_2sfdm(struct background *pba, double theta_phi);
+
+  double cos4_sfdm(struct background *pba, double theta_phi);
+  
   /** Scalar field potential and its derivatives **/
   double V_scf(
                struct background *pba,

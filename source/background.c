@@ -608,7 +608,6 @@ int background_functions(
     pvecback[pba->index_bg_y1_sfdm]    = y1;
     pvecback[pba->index_bg_e2alpha_sfdm] = exp2a;
     
-    pvecback[pba->index_bg_f_sfdm]       = f_sfdm;         /**< scalar field dark matter e^{\alpha}/y_1 */
     pvecback[pba->index_bg_q2_sfdm]    = q2_sfdm;
     pvecback[pba->index_bg_Q2_sfdm]    = Q2_sfdm;
 
@@ -1128,7 +1127,6 @@ int background_indices(
   class_define_index(pba->index_bg_y1_sfdm,pba->has_sfdm,index_bg,1);
   class_define_index(pba->index_bg_e2alpha_sfdm,pba->has_sfdm,index_bg,1);
   
-  class_define_index(pba->index_bg_f_sfdm,pba->has_sfdm,index_bg,1);
   class_define_index(pba->index_bg_q2_sfdm,pba->has_sfdm,index_bg,1);
   class_define_index(pba->index_bg_Q2_sfdm,pba->has_sfdm,index_bg,1);
   
@@ -2570,7 +2568,6 @@ int background_output_titles(
   class_store_columntitle(titles,"y1_sfdm",pba->has_sfdm);
   class_store_columntitle(titles,"exp(2alpha_sfdm)",pba->has_sfdm);
   
-  class_store_columntitle(titles,"f_sfdm",pba->has_sfdm);
   class_store_columntitle(titles,"q2_sfdm",pba->has_sfdm);
   class_store_columntitle(titles,"Q2_sfdm",pba->has_sfdm);
   
@@ -2658,7 +2655,6 @@ int background_output_data(
     class_store_double(dataptr,pvecback[pba->index_bg_y1_sfdm],pba->has_sfdm,storeidx);
     class_store_double(dataptr,pvecback[pba->index_bg_e2alpha_sfdm],pba->has_sfdm,storeidx);
     
-    class_store_double(dataptr,pvecback[pba->index_bg_f_sfdm],pba->has_sfdm,storeidx);
     class_store_double(dataptr,pvecback[pba->index_bg_q2_sfdm],pba->has_sfdm,storeidx);
     class_store_double(dataptr,pvecback[pba->index_bg_Q2_sfdm],pba->has_sfdm,storeidx);
     
@@ -3162,6 +3158,16 @@ double ddV_scf(
                struct background *pba,
                double phi) {
   return ddV_e_scf(pba,phi)*V_p_scf(pba,phi) + 2*dV_e_scf(pba,phi)*dV_p_scf(pba,phi) + V_e_scf(pba,phi)*ddV_p_scf(pba,phi);
+}
+
+/** Cosine and sine modified functions to kill oscillations with a very high frequency */
+double cos_sfdm(struct background *pba,
+               double theta_sfdm
+               ) {
+    /*double theta_thresh = 1.e2;*/
+    double theta_thresh = 30*_PI_;
+    double theta_tol = 1.;//1.e-2;
+    return 0.5*(1.-tanh(theta_tol*(theta_sfdm-theta_thresh)))*cos(theta_sfdm);
 }
 
 double sin_sfdm(struct background *pba,

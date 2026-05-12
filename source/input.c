@@ -1239,6 +1239,16 @@ int input_get_guess(double *xguess,
       xguess[index_guess] = pfzw->target_value[index_guess]/ba.h/ba.h/a_decay;
       dxdy[index_guess] = 1./a_decay/ba.h/ba.h;
       break;
+    case Omega_sfdm:
+      /* Default: take the passed value as xguess and set dxdy to 1. */
+      xguess[index_guess] = ba.sfdm_parameters[ba.sfdm_tuning_index];
+      dxdy[index_guess] = 1.;
+      break; 
+    case omega_sfdm:
+      /* Default: take the passed value as xguess and set dxdy to 1. */
+      xguess[index_guess] = ba.sfdm_parameters[ba.sfdm_tuning_index];
+      dxdy[index_guess] = 1.;
+      break;
     case Omega_scf:
       /* *
        * This guess is arbitrary, something nice using WKB should be implemented.

@@ -19,10 +19,10 @@ vpath .base build
 ########################################################
 
 # your C compiler:
-CC       = gcc
+CC       = clang #gcc
 #CC       = icc
 #CC       = pgcc
-CPP      = g++ --std=c++11 -fpermissive -Wno-write-strings
+CPP      = clang++ --std=c++11 -fpermissive -Wno-write-strings #g
 
 # your tool for creating static libraries:
 AR        = ar rv
@@ -32,7 +32,7 @@ AR        = ar rv
 # substitute python3 to python in the line below, or you can simply
 # add a compilation option on the terminal command line:
 # "PYTHON=python3 make all" (Thanks to Marius Millea for python3 compatibility)
-PYTHON ?= python
+PYTHON ?= python3
 
 # your optimization flag
 OPTFLAG = -O3

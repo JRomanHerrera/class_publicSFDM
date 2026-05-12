@@ -189,7 +189,7 @@ struct background
   int index_bg_e2alpha_sfdm;         /**< scalar field dark matter 0.5*log(density parameter) */
   int index_bg_rho_sfdm;       /**< scalar field dark matter energy density */
   int index_bg_p_sfdm;         /**< scalar field dark matter pressure */
-  int index_bg_f_sfdm;         /**< scalar field dark matter e^{2\alpha}/y^2_1 */
+  int index_bg_f_sfdm;         /**< scalar field dark matter e^{\alpha}/y_1 */
   int index_bg_q2_sfdm; /**< scalar field dark matter q variable */
   int index_bg_Q2_sfdm; /**< scalar field dark matter Q dynamic variable */
   int index_bg_w_tot;         /**< total equation of state */
@@ -582,7 +582,7 @@ extern "C" {
   double sin_2sfdm(struct background *pba, double theta_phi);
 
   double cos4_sfdm(struct background *pba, double theta_phi);
-  
+
   /** Scalar field potential and its derivatives **/
   double V_scf(
                struct background *pba,

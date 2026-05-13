@@ -595,7 +595,7 @@ int background_functions(
     //cos4_sfdm = 0.375 + 0.5*cos_th + 0.125*cos_2th;
     cos4_thsfdm = cos4_sfdm(pba, theta);
     q2_sfdm = q_sfdm*q_sfdm*f_sfdm*f_sfdm*y1*cos2sen_sfdm; // value of q2_sfdm= q^2*exp(2alpha)Cos^2(\theta/2)sin\theta/y1
-    //Q2_sfdm = 0.25*q_sfdm*q_sfdm*(1. + cos_th)*(1. + cos_th); // value of q2_sfdm= q^2*exp(2alpha)cos^4(\theta/2))/y1^2
+    //Q2_sfdm = 0.25*q_sfdm*q_sfdm*(1. + cos_th)*(1. + cos_th); // value of Q2_sfdm= q^2*exp(2alpha)cos^4(\theta/2))/y1^2
     Q2_sfdm = q_sfdm*q_sfdm*f_sfdm*f_sfdm*cos4_thsfdm;
     //Q2_sfdm = q_sfdm*q_sfdm*cos4_sfdm(pba, theta); // value of Q2_sfdm= (0.375+0.5*cos_th + 0.125*cos_sfdm(pba, 2*theta))
     Om_sfdm = exp2a * (1.+ Q2_sfdm); //Omega_sfdm= e^{2\alpha}[1 + q^2*exp(2alpha)cos^4(\theta/2))/y1^2]

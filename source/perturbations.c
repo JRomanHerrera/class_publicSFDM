@@ -8606,13 +8606,13 @@ int perturbations_print_variables(double tau,
           delta_sfdm =  delta0_sfdm; 
         }
         else{/*q>0*/
-        // value of q2_sfdm= q^2*exp(2alpha)(1+cos\theta)sin\theta/y1^2
+        // value of q2_sfdm= 0.5*q^2*exp(2alpha)(1+cos\theta)sin\theta/y1
         double q2_sfdm = ppw->pvecback[pba->index_bg_q2_sfdm];
         // Q2_sfdm=q^2*exp(2alpha)cos^4(theta/2)/y1^2
         double Q2_sfdm = ppw->pvecback[pba->index_bg_Q2_sfdm]; 
         double inv_denom = 1./(1. + Q2_sfdm);
         //delta_rho_sfdm = rho_sfdm*(delta0 + 0.5*Q2*(delta0 - sin_th*delta1/(1. + cos_th)))/(1. + 0.25*Q2); 
-        delta_sfdm = ((1. + 2.0*Q2_sfdm)*delta0_sfdm - 0.5*q2_sfdm*delta1_sfdm)* inv_denom;
+        delta_sfdm = ((1. + 2.0*Q2_sfdm)*delta0_sfdm - q2_sfdm/y1*delta1_sfdm)* inv_denom;
         }      
         /*rho_plus_p_theta_sfdm = k*k*ppw->pvecback[pba->index_bg_rho_sfdm]*(-y[ppw->pv->index_pt_delta0_sfdm]*sin_sfdm(pba,ppw->pvecback[pba->index_bg_theta_sfdm])+ y[ppw->pv->index_pt_delta1_sfdm]*(1.-cos_sfdm(pba,ppw->pvecback[pba->index_bg_theta_sfdm])))/(a*ppw->pvecback[pba->index_bg_H] *ppw->pvecback[pba->index_bg_y1_sfdm]);*/
         //rho_plus_p_theta_sfdm = k*k*ppw->pvecback[pba->index_bg_rho_crit]*r_sfdm*(-delta0*sin_th + delta1*(1.-cos_th))/ (a*H*y1);
@@ -9649,21 +9649,20 @@ int perturbations_derivs(double tau,
       }
       else{/*q>0*/
         double cos_2th = cos_2sfdm(pba,theta);
-        // value of q_sfdm= q^2*exp(2*alpha)/(y1^2)
+        // value of f2_sfdm= q^2*exp(2*alpha)/y1
         double q = pba->sfdm_parameters[1];
-        double f = ppw->pvecback[pba->index_bg_e2alpha_sfdm]/y1/y1;
-        double q_sfdm = q*q*f;
+        double f2_sfdm = q*q*ppw->pvecback[pba->index_bg_e2alpha_sfdm]/y1;
         // value of q2_sfdm= q^2*exp(2alpha)Cos^2(\theta/2)sin\theta/y1
         double q2_sfdm = ppw->pvecback[pba->index_bg_q2_sfdm];
         // Q2_sfdm=q^2*exp(2alpha)cos^4(theta/2)/y1^2
         double Q2_sfdm = ppw->pvecback[pba->index_bg_Q2_sfdm]; 
 
-        dy[pv->index_pt_delta0_sfdm] = -a_prime_over_a*((3.*sin_th+omega_sfdm*one_min_cos - 0.5*q_sfdm*(cos_th + cos_2th)*y1)*delta1_sfdm
+        dy[pv->index_pt_delta0_sfdm] = -a_prime_over_a*((3.*sin_th+omega_sfdm*one_min_cos - 0.5*f2_sfdm*(cos_th*one_plus_cos - sin_th*sin_th))*delta1_sfdm
                                                          -((omega_sfdm*sin_th + q2_sfdm)*delta0_sfdm))
                                                          -metric_continuity*one_min_cos; //metric_continuity = h'/2
       
         dy[pv->index_pt_delta1_sfdm] = -a_prime_over_a*((3.*cos_th + omega_sfdm*sin_th + q2_sfdm)*delta1_sfdm
-                                                        -(omega_sfdm*one_plus_cos + 2*Q2_sfdm*y1) *delta0_sfdm)
+                                                        -(omega_sfdm*one_plus_cos + 2*Q2_sfdm*y1)*delta0_sfdm)
                                                         -metric_continuity*sin_th; //metric_continuity = h'/2
       }
     }

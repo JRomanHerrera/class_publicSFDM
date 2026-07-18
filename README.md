@@ -1,3 +1,17 @@
+This repository contains a modified version of the CLASS Boltzmann code including an implementation of free ultralight scalar field dark matter (ulSFDM).
+
+The implementation extends the original CLASS framework by incorporating the cosmological background evolution and linear perturbations of a free real scalar field dark matter model while preserving all standard ΛCDM capabilities.
+
+For further documentation, see the **References** section below.
+
+
+- Authors: J. O. Román-Herrera, L. A. Ureña-López, and F. X. Linares-Cedeño.
+
+----------
+References:
+
+*On the cosmological evolution of Scalar Field Dark Matter in the CLASS code:...*, arXiv:2307.05600.
+
 CLASS: Cosmic Linear Anisotropy Solving System  {#mainpage}
 ==============================================
 
@@ -8,8 +22,7 @@ Audren, Simon Prunet, Jesus Torrado, Miguel Zumalacarregui, Francesco
 Montanari, Deanna Hooper, Samuel Brieden, Daniel Meinert, Matteo Lucca, etc.
 
 For download and information, see http://class-code.net
-
-
+-----------------------------------
 Compiling CLASS and getting started
 -----------------------------------
 

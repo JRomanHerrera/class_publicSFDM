@@ -35,7 +35,7 @@ AR        = ar rv
 PYTHON ?= python3 #python
 
 # your optimization flag
-OPTFLAG = -O3
+OPTFLAG = -O3 #-O3 -fcommon
 #OPTFLAG = -Ofast -ffast-math #-march=native
 #OPTFLAG = -fast
 

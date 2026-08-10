@@ -10,7 +10,7 @@ For further documentation, see the **References** section below.
 ----------
 References:
 
-*On the cosmological evolution of Scalar Field Dark Matter in the CLASS code:...*, arXiv:2307.05600.
+*On the cosmological evolution of Scalar Field Dark Matter in the CLASS code:...*, [arXiv:2307.05600](https://arxiv.org/abs/2307.05600).
 
 CLASS: Cosmic Linear Anisotropy Solving System  {#mainpage}
 ==============================================

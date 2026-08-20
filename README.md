@@ -1,16 +1,18 @@
-This repository contains a modified version of the CLASS Boltzmann code including an implementation of free ultralight scalar field dark matter (ulSFDM).
+This repository contains a modified version of the CLASS Boltzmann code (version 3.4.4) that implements free ultralight scalar field dark matter (ulSFDM).
 
-The implementation extends the original CLASS framework by incorporating the cosmological background evolution and linear perturbations of a free real scalar field dark matter model while preserving all standard ΛCDM capabilities.
-
-For further documentation, see the **References** section below.
+The project is a revised and updated version of the original [class.FreeSF](https://github.com/lurena-lopez/class.FreeSF) repository. It extends the standard CLASS framework by incorporating the cosmological background evolution and linear perturbations of a free real scalar field dark matter model, following the formalism presented in [Phys. Rev. D 109, 023512](https://journals.aps.org/prd/abstract/10.1103/PhysRevD.109.023512), while preserving the standard ΛCDM capabilities of CLASS.
 
 
-- Authors: J. O. Román-Herrera, L. A. Ureña-López, and F. X. Linares-Cedeño.
+For further details on the theoretical framework and implementation, see the **References** section below. 
 
-----------
-References:
+- **Authors:** J. O. Román-Herrera, L. A. Ureña-López, and F. X. Linares-Cedeño.
 
-*On the cosmological evolution of Scalar Field Dark Matter in the CLASS code:...*, [arXiv:2307.05600](https://arxiv.org/abs/2307.05600).
+--- 
+## References
+
+- L. A. Ureña-López and F. X. Linares-Cedeño, *On the cosmological evolution of Scalar Field Dark Matter in the CLASS code*, **Phys. Rev. D 109, 023512 (2024)**. [arXiv:2307.05600](https://arxiv.org/abs/2307.05600) | [Phys. Rev. D 109, 023512](https://journals.aps.org/prd/abstract/10.1103/PhysRevD.109.023512)
+
+---
 
 CLASS: Cosmic Linear Anisotropy Solving System  {#mainpage}
 ==============================================
